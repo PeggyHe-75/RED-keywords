@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>小红书母婴关键词排名 Dashboard｜可上传版</title>
+<title>小红书母婴关键词排名 Dashboard｜可上传与规则修正版</title>
 <style>
 :root{
   --bg:#f6f7fb; --card:#ffffff; --ink:#172033; --muted:#667085; --line:#e4e7ec;
@@ -27,6 +27,20 @@ h1{margin:0 0 8px;font-size:28px;letter-spacing:-.5px}.sub{color:var(--muted);fo
 .learning-summary{font-size:13px;color:#475467;line-height:1.75;padding:10px 12px;border-radius:14px;background:#fff;border:1px solid var(--line)}
 .learning-summary b{color:#172033}.learning-summary .up{color:#027a48;font-weight:800}.learning-summary .down{color:#b42318;font-weight:800}.learning-summary .flat{color:#475467;font-weight:800}
 .series-focus{display:inline-flex;align-items:center;padding:3px 7px;border-radius:999px;background:#fff2f6;color:#c11574;font-weight:800}
+
+
+/* 新增词与关键词匹配修正模块 */
+.new-term-panel{border-color:#d1fadf;background:linear-gradient(180deg,#fff,#f6fffa)}
+.new-term-cards{display:grid;grid-template-columns:repeat(5,minmax(130px,1fr));gap:10px;margin:12px 0}
+.new-term-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px}
+.new-term-card .label{font-size:12px;color:var(--muted);margin-bottom:7px}.new-term-card .value{font-size:22px;font-weight:900}.new-term-card .note{font-size:11px;color:var(--muted);margin-top:6px}
+.match-panel{border-color:#d6bbfb;background:linear-gradient(180deg,#fff,#fbf8ff)}
+.rule-form{display:grid;grid-template-columns:1.2fr 120px 120px 150px 170px auto auto;gap:10px;align-items:end;margin:12px 0}
+.rule-form .control input,.rule-form .control select{width:100%;height:38px;border:1px solid var(--line);border-radius:10px;background:#fff;padding:0 10px;color:var(--ink);outline:none}
+.rule-form .control input:focus,.rule-form .control select:focus{border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,.10)}
+.match-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0 12px}.match-actions .danger{border-color:#fecdca;color:#b42318;background:#fff5f4}.match-actions .primary{border-color:#d6bbfb;color:#5925dc;background:#f4f3ff;font-weight:800}
+.rule-badge{display:inline-flex;align-items:center;border-radius:999px;padding:3px 7px;background:#f4f3ff;color:#5925dc;font-weight:800;font-size:12px}.manual-rule{display:inline-flex;align-items:center;border-radius:999px;padding:3px 7px;background:#fffaeb;color:#b54708;font-weight:800;font-size:12px}.ok-text{color:#027a48;font-weight:800}.bad-text{color:#b42318;font-weight:800}.inline-note{font-size:12px;color:var(--muted);line-height:1.65}.match-split{display:grid;grid-template-columns:minmax(360px,.85fr) 1.15fr;gap:14px}.match-split .table-wrap{max-height:360px}.match-preview table{min-width:760px}.match-rules table{min-width:760px}.pick-btn{height:28px;border:1px solid var(--line);border-radius:8px;background:#fff;padding:0 8px;color:#344054;cursor:pointer;font-size:12px}.pick-btn:hover{border-color:#7c3aed;color:#5925dc}
+@media (max-width:1100px){.new-term-cards{grid-template-columns:repeat(2,1fr)}.rule-form{grid-template-columns:repeat(2,1fr)}.match-split{grid-template-columns:1fr}}
 
 
 /* 品牌月度 / 季度排名趋势：横向滚动时固定左侧信息列到「当前期原词」 */
@@ -71,8 +85,8 @@ h1{margin:0 0 8px;font-size:28px;letter-spacing:-.5px}.sub{color:var(--muted);fo
 </head>
 <body>
 <header>
-  <h1>小红书母婴关键词排名 Dashboard｜GitHub 可上传版</h1>
-  <div class="sub">支持「上游词 / 下游词」「品牌词 / 品类词 / 竞品词 / 成分词」筛选；页面内置当前数据，也支持上传新版 Excel 文件后在浏览器中重新解析生成看板；可直接上传 GitHub Pages 使用。</div>
+  <h1>小红书母婴关键词排名 Dashboard｜可上传与规则修正版</h1>
+  <div class="sub">支持「上游词 / 下游词」「品牌词 / 品类词 / 竞品词 / 成分词」筛选；支持上传新版 Excel、本地修正关键词匹配规则，并自动识别月度 / 季度年内新增词；可直接上传 GitHub Pages 使用。</div>
 </header>
 <div class="wrap">
   <section class="panel sticky-filters" id="filterPanel">
@@ -94,6 +108,56 @@ h1{margin:0 0 8px;font-size:28px;letter-spacing:-.5px}.sub{color:var(--muted);fo
       <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none" />
       <span class="hint">支持上传同结构的小红书上下游词 Excel。上传后会在当前浏览器中重新解析并刷新 Dashboard，原始文件不会上传到服务器。</span>
       <span class="status" id="status"></span>
+    </div>
+  </section>
+
+
+
+  <section class="panel new-term-panel" id="newTermPanel">
+    <div class="section-title">
+      <div><h2>年内新增词监测</h2><p>根据当前选择的月度 / 季度、上下游方向、词根类型、词根、品牌与搜索条件，识别「同一年历史周期未出现、当前周期新增出现」的词。</p></div>
+      <span class="pill" id="newTermPill">新增词</span>
+    </div>
+    <div id="newTermSummary" class="learning-summary"></div>
+    <div id="newTermCards" class="new-term-cards"></div>
+    <div class="table-wrap" style="max-height:420px"><table id="newTermTable"></table></div>
+  </section>
+
+  <section class="panel match-panel" id="matchRulePanel">
+    <div class="section-title">
+      <div><h2>关键词匹配修正入口</h2><p>当品牌 / 品类或品牌归属识别不准时，可在这里新增修正规则。规则会保存在当前浏览器本地，上传新 Excel 后仍会自动应用。</p></div>
+      <span class="pill" id="matchRulePill">匹配规则</span>
+    </div>
+    <div class="notice">用法：输入需要修正的关键词，选择「完全匹配」或「包含匹配」，再指定词性质、品牌归属和词类。例如把「a2紫白金」设为品牌相关 / a2，或把误判为品牌的词设为品类相关。</div>
+    <div class="rule-form">
+      <div class="control"><label>匹配关键词</label><input id="ruleKey" type="text" placeholder="例如：a2紫白金、爱他美德国白金版" /></div>
+      <div class="control"><label>匹配方式</label><select id="ruleMode"><option value="exact">完全匹配</option><option value="contains">包含匹配</option></select></div>
+      <div class="control"><label>词性质</label><select id="ruleNature"><option value="品牌相关">品牌相关</option><option value="品类相关">品类相关</option></select></div>
+      <div class="control"><label>品牌归属</label><input id="ruleBrand" type="text" list="brandList" placeholder="如：爱他美 / a2" /></div>
+      <div class="control"><label>词类</label><input id="ruleTermClass" type="text" list="termClassList" placeholder="如：竞品品牌/产品词" /></div>
+      <div class="control"><label>&nbsp;</label><button class="small-btn primary" id="saveRuleBtn" type="button">保存修正</button></div>
+      <div class="control"><label>&nbsp;</label><button class="small-btn" id="clearRuleBtn" type="button">清空输入</button></div>
+    </div>
+    <datalist id="brandList"></datalist>
+    <datalist id="termClassList">
+      <option value="品牌相关"><option value="自有品牌/产品词"><option value="竞品品牌/产品词"><option value="品类通用"><option value="喂养场景"><option value="宝宝问题/敏感"><option value="成分卖点"><option value="阶段人群"><option value="榜单口碑/比较"><option value="价格渠道">
+    </datalist>
+    <div class="match-actions">
+      <button class="small-btn" id="exportRuleBtn" type="button">导出匹配规则 JSON</button>
+      <button class="small-btn" id="importRuleBtn" type="button">导入匹配规则 JSON</button>
+      <input id="ruleImportInput" type="file" accept=".json" style="display:none" />
+      <button class="small-btn danger" id="clearAllRulesBtn" type="button">清空全部本地规则</button>
+      <span class="status" id="ruleStatus"></span>
+    </div>
+    <div class="match-split">
+      <div class="match-rules">
+        <div class="summary-line" id="matchRuleSummary"></div>
+        <div class="table-wrap"><table id="matchRuleTable"></table></div>
+      </div>
+      <div class="match-preview">
+        <div class="summary-line" id="matchPreviewSummary"></div>
+        <div class="table-wrap"><table id="matchPreviewTable"></table></div>
+      </div>
     </div>
   </section>
 
@@ -234,6 +298,156 @@ function currentFilters(){
     view:$('view').value || '全部', brand:$('brand').value || '全部', search:$('search').value.trim().toLowerCase()
   };
 }
+
+const MATCH_STORAGE_KEY = 'xhs_keyword_match_overrides_v2';
+let MATCH_OVERRIDES = [];
+function normMatchKey(s){ return String(s || '').trim().toLowerCase(); }
+function ruleId(rule){ return `${rule.mode || 'exact'}|||${normMatchKey(rule.key)}`; }
+function loadMatchOverrides(){
+  try{
+    const raw = localStorage.getItem(MATCH_STORAGE_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    return Array.isArray(arr) ? arr.filter(x=>x && x.key).map(x=>({
+      key:String(x.key || '').trim(), mode:x.mode === 'contains' ? 'contains' : 'exact', nature:x.nature === '品类相关' ? '品类相关' : '品牌相关',
+      brand:String(x.brand || '').trim(), termClass:String(x.termClass || '').trim(), updatedAt:x.updatedAt || ''
+    })) : [];
+  }catch(e){ console.warn('Failed to load match overrides', e); return []; }
+}
+function saveMatchOverrides(){ localStorage.setItem(MATCH_STORAGE_KEY, JSON.stringify(MATCH_OVERRIDES)); }
+function findMatchOverride(term){
+  const t = normMatchKey(term); if(!t || !MATCH_OVERRIDES.length) return null;
+  const exact = MATCH_OVERRIDES.filter(r => (r.mode || 'exact') === 'exact' && t === normMatchKey(r.key)).sort((a,b)=>normMatchKey(b.key).length - normMatchKey(a.key).length)[0];
+  if(exact) return exact;
+  return MATCH_OVERRIDES.filter(r => r.mode === 'contains' && normMatchKey(r.key) && t.includes(normMatchKey(r.key))).sort((a,b)=>normMatchKey(b.key).length - normMatchKey(a.key).length)[0] || null;
+}
+function captureBaseClassification(){
+  for(const r of DATA){
+    if(r.baseBrand === undefined) r.baseBrand = r.brand || detectBrand(r.term) || '';
+    if(r.baseTermClass === undefined) r.baseTermClass = r.termClass || classifyTerm(r.term, r.baseBrand);
+  }
+}
+function reclassifyDataWithRules(){
+  captureBaseClassification();
+  for(const r of DATA){
+    r.brand = r.baseBrand || '';
+    r.termClass = r.baseTermClass || classifyTerm(r.term, r.brand);
+    r.manualRule = '';
+    const rule = findMatchOverride(r.term);
+    if(rule){
+      r.manualRule = rule.key;
+      if(rule.nature === '品类相关'){
+        r.brand = '';
+        r.termClass = rule.termClass || classifyTerm(r.term, '');
+      }else{
+        r.brand = rule.brand || r.brand || detectBrand(r.term) || '';
+        r.termClass = rule.termClass || classifyTerm(r.term, r.brand);
+      }
+    }
+  }
+}
+function clearRuleInputs(){ $('ruleKey').value=''; $('ruleMode').value='exact'; $('ruleNature').value='品牌相关'; $('ruleBrand').value=''; $('ruleTermClass').value=''; }
+function setRuleFormFromRow(term, brand, termClass){
+  $('ruleKey').value = term || '';
+  $('ruleMode').value = 'exact';
+  $('ruleNature').value = brand ? '品牌相关' : '品类相关';
+  $('ruleBrand').value = brand || '';
+  $('ruleTermClass').value = termClass || '';
+  $('ruleStatus').textContent = '已带入该词，可修改后保存。';
+  const panel = $('matchRulePanel'); if(panel) panel.scrollIntoView({behavior:'smooth', block:'start'});
+  $('ruleKey').focus();
+}
+function upsertMatchRule(){
+  const key = $('ruleKey').value.trim(); const mode = $('ruleMode').value || 'exact'; const nature = $('ruleNature').value || '品牌相关'; const brand = $('ruleBrand').value.trim(); const termClass = $('ruleTermClass').value.trim();
+  if(!key){ $('ruleStatus').textContent = '请先输入匹配关键词。'; return; }
+  if(nature === '品牌相关' && !brand){ $('ruleStatus').textContent = '品牌相关需要填写品牌归属，例如：爱他美 / a2 / 飞鹤。'; return; }
+  const next = {key, mode, nature, brand:nature === '品牌相关' ? brand : '', termClass, updatedAt:new Date().toLocaleString('zh-CN')};
+  const id = ruleId(next); const idx = MATCH_OVERRIDES.findIndex(r => ruleId(r) === id);
+  if(idx >= 0) MATCH_OVERRIDES[idx] = next; else MATCH_OVERRIDES.push(next);
+  MATCH_OVERRIDES.sort((a,b)=>normMatchKey(b.key).length-normMatchKey(a.key).length || collator.compare(a.key,b.key));
+  saveMatchOverrides(); reclassifyDataWithRules(); fillControls(); render(); $('ruleStatus').textContent = `已保存修正：${key}`;
+}
+function deleteMatchRule(idx){
+  if(idx < 0 || idx >= MATCH_OVERRIDES.length) return;
+  const name = MATCH_OVERRIDES[idx].key; MATCH_OVERRIDES.splice(idx,1); saveMatchOverrides(); reclassifyDataWithRules(); fillControls(); render(); $('ruleStatus').textContent = `已删除规则：${name}`;
+}
+function clearAllMatchRules(){
+  if(!confirm('确认清空全部本地匹配修正规则吗？')) return;
+  MATCH_OVERRIDES = []; saveMatchOverrides(); reclassifyDataWithRules(); fillControls(); render(); $('ruleStatus').textContent = '已清空全部本地匹配规则。';
+}
+function exportMatchRules(){
+  const blob = new Blob([JSON.stringify(MATCH_OVERRIDES, null, 2)], {type:'application/json;charset=utf-8'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'xhs_keyword_match_rules.json'; a.click(); URL.revokeObjectURL(a.href);
+}
+async function importMatchRules(e){
+  const file = e.target.files?.[0]; if(!file) return;
+  try{
+    const arr = JSON.parse(await file.text());
+    if(!Array.isArray(arr)) throw new Error('not array');
+    MATCH_OVERRIDES = arr.filter(x=>x && x.key).map(x=>({key:String(x.key||'').trim(), mode:x.mode==='contains'?'contains':'exact', nature:x.nature==='品类相关'?'品类相关':'品牌相关', brand:String(x.brand||'').trim(), termClass:String(x.termClass||'').trim(), updatedAt:x.updatedAt || new Date().toLocaleString('zh-CN')}));
+    saveMatchOverrides(); reclassifyDataWithRules(); fillControls(); render(); $('ruleStatus').textContent = `已导入 ${MATCH_OVERRIDES.length} 条匹配规则。`;
+  }catch(err){ console.error(err); $('ruleStatus').textContent = '导入失败，请确认 JSON 文件格式正确。'; }
+  e.target.value='';
+}
+function renderMatchManager(){
+  if(!$('matchRuleTable')) return;
+  const brandOptions = uniq(DATA.map(r=>r.brand).concat(['爱他美','a2','飞鹤','金领冠','皇家美素佳儿','可瑞康','启赋/惠氏','合生元','雀巢能恩','美赞臣']).filter(Boolean)).sort((a,b)=> a==='爱他美'?-1:b==='爱他美'?1:collator.compare(a,b));
+  $('brandList').innerHTML = brandOptions.map(b=>`<option value="${esc(b)}"></option>`).join('');
+  $('matchRulePill').textContent = `${MATCH_OVERRIDES.length} 条规则`;
+  $('matchRuleSummary').innerHTML = `当前浏览器本地保存 <b>${fmt(MATCH_OVERRIDES.length)}</b> 条修正规则。规则只影响当前看板显示，不会修改原始 Excel。`;
+  const ruleHead = `<thead><tr><th>匹配关键词</th><th>方式</th><th>词性质</th><th>品牌归属</th><th>词类</th><th>更新时间</th><th>操作</th></tr></thead>`;
+  const ruleBody = MATCH_OVERRIDES.map((r,i)=>`<tr><td><span class="rule-badge">${esc(r.key)}</span></td><td>${r.mode==='contains'?'包含匹配':'完全匹配'}</td><td>${esc(r.nature)}</td><td>${r.brand?`<span class="brand-tag ${r.brand==='爱他美'?'self':''}">${esc(r.brand)}</span>`:'<span class="muted">-</span>'}</td><td>${esc(r.termClass || '-')}</td><td>${esc(r.updatedAt || '-')}</td><td><button class="pick-btn edit-rule" data-idx="${i}">编辑</button> <button class="pick-btn del-rule" data-idx="${i}">删除</button></td></tr>`).join('');
+  $('matchRuleTable').innerHTML = ruleHead + `<tbody>${ruleBody || '<tr><td colspan="7" class="empty">暂无本地修正规则</td></tr>'}</tbody>`;
+  $('matchRuleTable').querySelectorAll('.del-rule').forEach(btn=>btn.addEventListener('click',()=>deleteMatchRule(Number(btn.dataset.idx))));
+  $('matchRuleTable').querySelectorAll('.edit-rule').forEach(btn=>btn.addEventListener('click',()=>{ const r=MATCH_OVERRIDES[Number(btn.dataset.idx)]; if(r){ $('ruleKey').value=r.key; $('ruleMode').value=r.mode; $('ruleNature').value=r.nature; $('ruleBrand').value=r.brand; $('ruleTermClass').value=r.termClass; $('ruleStatus').textContent='已带入规则，可修改后保存。'; }}));
+
+  const preview = filteredCurrent().sort(sortByRootRank).slice(0,120);
+  const manualCount = filteredCurrent().filter(r=>r.manualRule).length;
+  $('matchPreviewSummary').innerHTML = `当前筛选下预览前 <b>${fmt(preview.length)}</b> 条识别结果；其中 <b>${fmt(manualCount)}</b> 条命中了本地修正规则。点击「修正」可快速带入左侧表单。`;
+  const previewHead = `<thead><tr><th>操作</th><th>原词</th><th>当前词性质</th><th>品牌</th><th>词类</th><th>命中规则</th><th>词根</th></tr></thead>`;
+  const previewBody = preview.map((r,i)=>`<tr><td><button class="pick-btn pick-term" data-i="${i}">修正</button></td><td>${esc(r.term)}</td><td>${r.brand?'<span class="brand-tag">品牌相关</span>':'<span class="cat-tag">品类相关</span>'}</td><td>${r.brand?`<span class="brand-tag ${r.brand==='爱他美'?'self':''}">${esc(r.brand)}</span>`:'<span class="muted">-</span>'}</td><td>${esc(r.termClass)}</td><td>${r.manualRule?`<span class="manual-rule">${esc(r.manualRule)}</span>`:'<span class="muted">-</span>'}</td><td>${esc(r.direction)} / ${esc(r.rootType)} / ${esc(r.root)}</td></tr>`).join('');
+  $('matchPreviewTable').innerHTML = previewHead + `<tbody>${previewBody || '<tr><td colspan="7" class="empty">当前筛选下暂无预览数据</td></tr>'}</tbody>`;
+  $('matchPreviewTable').querySelectorAll('.pick-term').forEach(btn=>btn.addEventListener('click',()=>{ const r=preview[Number(btn.dataset.i)]; if(r) setRuleFormFromRow(r.term, r.brand, r.termClass); }));
+}
+function parsePeriodYear(label){ const m = String(label || '').match(/^(\d{4})/); return m ? Number(m[1]) : null; }
+function currentPeriodInfo(type, label){ return getPeriods(type).find(p=>p.label === label) || null; }
+function priorPeriodsSameYear(type, label){
+  const curr = currentPeriodInfo(type, label); if(!curr) return [];
+  const year = parsePeriodYear(label);
+  return getPeriods(type).filter(p => parsePeriodYear(p.label) === year && p.sort < curr.sort);
+}
+function newTermRows(){
+  const f = currentFilters();
+  const priors = priorPeriodsSameYear(f.periodType, f.period);
+  const priorLabels = new Set(priors.map(p=>p.label));
+  const key = r => `${r.direction}|||${r.rootType}|||${r.root}|||${r.term}`;
+  const currRows = DATA.filter(r => r.periodType === f.periodType && r.period === f.period && passNonPeriodFilters(r, f));
+  const priorRows = DATA.filter(r => r.periodType === f.periodType && priorLabels.has(r.period) && passNonPeriodFilters(r, f));
+  const priorSet = new Set(priorRows.map(key));
+  const best = new Map();
+  for(const r of currRows){
+    const k = key(r);
+    if(priorSet.has(k)) continue;
+    if(!best.has(k) || r.rank < best.get(k).rank) best.set(k, r);
+  }
+  const rows = [...best.values()].sort(sortByRootRank);
+  return {rows, priors};
+}
+function renderNewTerms(){
+  if(!$('newTermTable')) return;
+  const f = currentFilters(); const {rows, priors} = newTermRows();
+  const brandRows = rows.filter(r=>r.brand); const catRows = rows.filter(r=>!r.brand); const roots = uniq(rows.map(r=>`${r.direction}/${r.rootType}/${r.root}`)); const brands = uniq(brandRows.map(r=>r.brand));
+  $('newTermPill').textContent = `${f.period} 新增 ${fmt(rows.length)}`;
+  const historyText = priors.length ? priors.map(p=>p.label).join('、') : '当前年内暂无更早历史周期，因此当前期出现词均按首期新增展示';
+  $('newTermSummary').innerHTML = `当前周期：<b>${esc(f.period)}</b>；新增判断口径：当前筛选范围内，<b>同一年历史周期未出现</b>，但当前周期出现。对比历史周期：<b>${esc(historyText)}</b>。`;
+  const bestRank = rows.length ? Math.min(...rows.map(r=>r.rank)) : '-';
+  $('newTermCards').innerHTML = [
+    ['年内新增词', fmt(rows.length), '当前筛选范围'], ['品牌相关新增', fmt(brandRows.length), `${rows.length?Math.round(brandRows.length/rows.length*100):0}%`], ['品类相关新增', fmt(catRows.length), `${rows.length?Math.round(catRows.length/rows.length*100):0}%`], ['覆盖词根', fmt(roots.length), '上游/下游词根'], ['涉及品牌', fmt(brands.length), `最佳原始排名 ${bestRank}`]
+  ].map(([label,value,note])=>`<div class="new-term-card"><div class="label">${esc(label)}</div><div class="value">${esc(value)}</div><div class="note">${esc(note)}</div></div>`).join('');
+  const head = `<thead><tr><th>展示排名</th><th>当前原始排名</th><th>上下游</th><th>词根类型</th><th>词根</th><th>新增词</th><th>词性质</th><th>品牌</th><th>词类</th></tr></thead>`;
+  const body = rows.slice(0,300).map((r,i)=>`<tr><td><span class="rank-badge">${i+1}</span></td><td class="rank">#${r.rank}</td><td>${esc(r.direction)}</td><td>${esc(r.rootType)}</td><td>${esc(r.root)}</td><td>${esc(r.term)}</td><td>${r.brand?'<span class="brand-tag">品牌相关</span>':'<span class="cat-tag">品类相关</span>'}</td><td>${r.brand?`<span class="brand-tag ${r.brand==='爱他美'?'self':''}">${esc(r.brand)}</span>`:'<span class="muted">-</span>'}</td><td>${esc(r.termClass)}</td></tr>`).join('');
+  $('newTermTable').innerHTML = head + `<tbody>${body || '<tr><td colspan="9" class="empty">当前筛选下暂无年内新增词</td></tr>'}</tbody>`;
+}
+
 function passNonPeriodFilters(r, f, opts={}){
   if(f.direction !== '全部' && r.direction !== f.direction) return false;
   if(f.rootType !== '全部' && r.rootType !== f.rootType) return false;
@@ -316,10 +530,12 @@ function groupStats(rows, keyFn){
 }
 function renderOverall(rows){
   const sorted = [...rows].sort(sortByRootRank);
-  $('overallInfo').innerHTML = `当前筛选共 <b>${fmt(sorted.length)}</b> 条记录；表格展示前 300 条。展示排名为当前筛选后的连续顺序，小红书原始排名单独保留。`;
-  const head = `<thead><tr><th>展示排名</th><th>小红书原始排名</th><th>上下游</th><th>词根类型</th><th>词根</th><th>关联词</th><th>词性质</th><th>品牌</th><th>词类</th></tr></thead>`;
-  const body = sorted.slice(0,300).map((r,i)=>`<tr><td><span class="rank-badge">${i+1}</span></td><td class="rank">#${r.rank}</td><td>${esc(r.direction)}</td><td>${esc(r.rootType)}</td><td>${esc(r.root)}</td><td>${esc(r.term)}</td><td>${r.brand?'<span class="brand-tag">品牌相关</span>':'<span class="cat-tag">品类相关</span>'}</td><td>${r.brand?`<span class="brand-tag ${r.brand==='爱他美'?'self':''}">${esc(r.brand)}</span>`:'<span class="muted">-</span>'}</td><td>${esc(r.termClass)}</td></tr>`).join('');
-  $('overallTable').innerHTML = head + `<tbody>${body || '<tr><td colspan="9" class="empty">暂无数据</td></tr>'}</tbody>`;
+  const visible = sorted.slice(0,300);
+  $('overallInfo').innerHTML = `当前筛选共 <b>${fmt(sorted.length)}</b> 条记录；表格展示前 300 条。展示排名为当前筛选后的连续顺序，小红书原始排名单独保留；如识别不准，可点击“修正”带入匹配规则。`;
+  const head = `<thead><tr><th>展示排名</th><th>小红书原始排名</th><th>上下游</th><th>词根类型</th><th>词根</th><th>关联词</th><th>词性质</th><th>品牌</th><th>词类</th><th>命中规则</th><th>操作</th></tr></thead>`;
+  const body = visible.map((r,i)=>`<tr><td><span class="rank-badge">${i+1}</span></td><td class="rank">#${r.rank}</td><td>${esc(r.direction)}</td><td>${esc(r.rootType)}</td><td>${esc(r.root)}</td><td>${esc(r.term)}</td><td>${r.brand?'<span class="brand-tag">品牌相关</span>':'<span class="cat-tag">品类相关</span>'}</td><td>${r.brand?`<span class="brand-tag ${r.brand==='爱他美'?'self':''}">${esc(r.brand)}</span>`:'<span class="muted">-</span>'}</td><td>${esc(r.termClass)}</td><td>${r.manualRule?`<span class="manual-rule">${esc(r.manualRule)}</span>`:'<span class="muted">默认</span>'}</td><td><button class="pick-btn pick-overall" data-i="${i}">修正</button></td></tr>`).join('');
+  $('overallTable').innerHTML = head + `<tbody>${body || '<tr><td colspan="11" class="empty">暂无数据</td></tr>'}</tbody>`;
+  $('overallTable').querySelectorAll('.pick-overall').forEach(btn=>btn.addEventListener('click',()=>{ const r=visible[Number(btn.dataset.i)]; if(r) setRuleFormFromRow(r.term, r.brand, r.termClass); }));
 }
 function brandOnlyRowsFor(period, f, opts={}){
   // 品牌 Only 当前期口径：只剔除品类词，不再按品牌去重。
@@ -330,7 +546,7 @@ function brandOnlyRowsFor(period, f, opts={}){
     const key = `${r.direction}|||${r.rootType}|||${r.root}|||${r.term}`;
     const old = grouped.get(key);
     if(!old || r.rank < old.originalRank){
-      grouped.set(key, {direction:r.direction, rootType:r.rootType, root:r.root, brand:r.brand, originalRank:r.rank, representative:r.term, term:r.term, termClass:r.termClass, period});
+      grouped.set(key, {direction:r.direction, rootType:r.rootType, root:r.root, brand:r.brand, originalRank:r.rank, representative:r.term, term:r.term, termClass:r.termClass, manualRule:r.manualRule || '', period});
     }
   }
   const arr = [...grouped.values()];
@@ -355,9 +571,11 @@ function brandOnlyRowsFor(period, f, opts={}){
 }
 function renderBrandOnly(rows){
   $('brandOnlyInfo').innerHTML = `当前筛选形成 <b>${fmt(rows.length)}</b> 条词根 × 品牌原词记录；表格展示前 300 条。`;
-  const head = `<thead><tr><th>展示排名</th><th>词根内品牌词 Only</th><th>小红书原始排名</th><th>上下游</th><th>词根类型</th><th>词根</th><th>品牌</th><th>具体原词</th><th>词类</th></tr></thead>`;
-  const body = rows.slice(0,300).map(r=>`<tr><td><span class="rank-badge">${r.displayRank}</span></td><td class="rank">#${r.brandOnlyRank}</td><td>#${r.originalRank}</td><td>${esc(r.direction)}</td><td>${esc(r.rootType)}</td><td>${esc(r.root)}</td><td><span class="brand-tag ${r.brand==='爱他美'?'self':''}">${esc(r.brand)}</span></td><td>${esc(r.representative)}</td><td>${esc(r.termClass)}</td></tr>`).join('');
-  $('brandOnlyTable').innerHTML = head + `<tbody>${body || '<tr><td colspan="9" class="empty">当前筛选下暂无品牌 Only 数据</td></tr>'}</tbody>`;
+  const visible = rows.slice(0,300);
+  const head = `<thead><tr><th>展示排名</th><th>词根内品牌词 Only</th><th>小红书原始排名</th><th>上下游</th><th>词根类型</th><th>词根</th><th>品牌</th><th>具体原词</th><th>词类</th><th>命中规则</th><th>操作</th></tr></thead>`;
+  const body = visible.map((r,i)=>`<tr><td><span class="rank-badge">${r.displayRank}</span></td><td class="rank">#${r.brandOnlyRank}</td><td>#${r.originalRank}</td><td>${esc(r.direction)}</td><td>${esc(r.rootType)}</td><td>${esc(r.root)}</td><td><span class="brand-tag ${r.brand==='爱他美'?'self':''}">${esc(r.brand)}</span></td><td>${esc(r.representative)}</td><td>${esc(r.termClass)}</td><td>${r.manualRule?`<span class="manual-rule">${esc(r.manualRule)}</span>`:'<span class="muted">默认</span>'}</td><td><button class="pick-btn pick-brand-only" data-i="${i}">修正</button></td></tr>`).join('');
+  $('brandOnlyTable').innerHTML = head + `<tbody>${body || '<tr><td colspan="11" class="empty">当前筛选下暂无品牌 Only 数据</td></tr>'}</tbody>`;
+  $('brandOnlyTable').querySelectorAll('.pick-brand-only').forEach(btn=>btn.addEventListener('click',()=>{ const r=visible[Number(btn.dataset.i)]; if(r) setRuleFormFromRow(r.representative, r.brand, r.termClass); }));
 }
 function trendRows(f){
   const periods = getPeriods(f.periodType);
@@ -552,6 +770,8 @@ function render(){
   fillControls();
   const rows = filteredCurrent();
   renderKpis(rows);
+  renderNewTerms();
+  renderMatchManager();
   renderSeriesLearning();
   const brandStats = groupStats(rows.filter(r=>r.brand), r=>r.brand).slice(0,10);
   renderBars('brandBars', brandStats.map(x=>({label:x.label, count:x.count, best:x.best})), 'label', 'count', 'best');
@@ -661,13 +881,18 @@ async function handleFile(e){
     const buf = await file.arrayBuffer();
     const wb = XLSX.read(buf, {type:'array'});
     DATA = parseWorkbook(wb);
+    captureBaseClassification();
+    reclassifyDataWithRules();
     META = {sourceName:file.name, generatedAt:new Date().toLocaleString('zh-CN'), recordCount:DATA.length, termCount:uniq(DATA.map(r=>r.term)).length, rootCount:uniq(DATA.map(r=>r.root)).length, brandCount:uniq(DATA.map(r=>r.brand)).length};
     $('status').textContent = `已载入：${file.name}，共 ${fmt(DATA.length)} 条记录`;
     fillControls(true); resetFilters();
   }catch(err){ console.error(err); $('status').textContent = '解析失败，请确认文件结构与小红书上下游词表一致。'; }
 }
 function init(){
+  MATCH_OVERRIDES = loadMatchOverrides();
   DATA = expandPayload(PAYLOAD);
+  captureBaseClassification();
+  reclassifyDataWithRules();
   fillControls(true);
   const latestMonth = getPeriods('月度').at(-1); if(latestMonth){ $('periodType').value='月度'; fillControls(); $('period').value=latestMonth.label; }
   render();
@@ -677,6 +902,12 @@ function init(){
   $('csvBtn').addEventListener('click', downloadCSV);
   $('uploadBtn').addEventListener('click', () => $('fileInput').click());
   $('fileInput').addEventListener('change', handleFile);
+  $('saveRuleBtn').addEventListener('click', upsertMatchRule);
+  $('clearRuleBtn').addEventListener('click', clearRuleInputs);
+  $('clearAllRulesBtn').addEventListener('click', clearAllMatchRules);
+  $('exportRuleBtn').addEventListener('click', exportMatchRules);
+  $('importRuleBtn').addEventListener('click', () => $('ruleImportInput').click());
+  $('ruleImportInput').addEventListener('change', importMatchRules);
   if(!window.XLSX){ $('status').textContent = '已加载内置数据；Excel 上传组件未加载，请检查网络或 CDN 访问。'; } else { $('status').textContent = '已加载内置数据，也可上传新版 Excel 重新分析。'; }
 }
 init();
