@@ -66,13 +66,21 @@ h1{margin:0 0 8px;font-size:28px;letter-spacing:-.5px}.sub{color:var(--muted);fo
 }
 
 
+
+.mapping-panel{border-color:#dbe4ff;background:linear-gradient(180deg,#fff,#fbfcff)}
+.mapping-toolbar{display:grid;grid-template-columns:1.3fr 1fr .8fr 1.3fr auto;gap:12px;align-items:end;margin-top:12px}
+.mapping-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;border:1px dashed #d0d5dd;background:#fcfcfd;border-radius:14px;padding:12px;margin-top:12px}
+.mapping-chip{display:inline-flex;align-items:center;border-radius:999px;background:#eef4ff;color:#3538cd;font-weight:800;font-size:12px;padding:3px 8px}
+.rule-source{display:inline-flex;align-items:center;border-radius:999px;background:#f2f4f7;color:#475467;font-weight:700;font-size:11px;padding:3px 7px}
+@media (max-width:1100px){.mapping-toolbar{grid-template-columns:1fr}.mapping-actions{align-items:flex-start}}
+
 @media (max-width:1100px){.learning-grid{grid-template-columns:repeat(2,1fr)}.toolbar{grid-template-columns:repeat(2,1fr)}.cards{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}.wrap{padding:16px}header{padding:22px 16px}.bar-row{grid-template-columns:100px 1fr 54px}}
 </style>
 </head>
 <body>
 <header>
   <h1>小红书母婴关键词排名 Dashboard｜GitHub 可上传版</h1>
-  <div class="sub">支持「上游词 / 下游词」「品牌词 / 品类词 / 竞品词 / 成分词」筛选；页面内置当前数据，也支持上传新版 Excel 文件后在浏览器中重新解析生成看板；可直接上传 GitHub Pages 使用。</div>
+  <div class="sub">支持「上游词 / 下游词」「品牌词 / 品类词 / 竞品词 / 成分词」筛选；新增专业号 / 品牌映射表上传、下载和手动维护；页面内置当前数据，也支持上传新版 Excel 文件后在浏览器中重新解析生成看板。</div>
 </header>
 <div class="wrap">
   <section class="panel sticky-filters" id="filterPanel">
@@ -94,6 +102,46 @@ h1{margin:0 0 8px;font-size:28px;letter-spacing:-.5px}.sub{color:var(--muted);fo
       <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none" />
       <span class="hint">支持上传同结构的小红书上下游词 Excel。上传后会在当前浏览器中重新解析并刷新 Dashboard，原始文件不会上传到服务器。</span>
       <span class="status" id="status"></span>
+    </div>
+  </section>
+
+
+
+  <section class="panel mapping-panel" id="mappingPanel">
+    <div class="section-title">
+      <div>
+        <h2>专业号 / 品牌映射表</h2>
+        <p>根据映射表把专业号、缩写账号或新增品牌词自动归属到对应品牌；如果每周出现新品牌，可以在这里手动新增并保存到本地规则。</p>
+      </div>
+      <span class="pill" id="mappingPill">映射规则</span>
+    </div>
+    <div class="mapping-actions">
+      <strong>映射表管理：</strong>
+      <button class="small-btn" id="mappingUploadBtn" type="button">上传映射表</button>
+      <input type="file" id="mappingFileInput" accept=".xlsx,.xls,.csv" style="display:none" />
+      <button class="small-btn" id="mappingDownloadBtn" type="button">下载当前映射表 CSV</button>
+      <button class="small-btn" id="mappingResetBtn" type="button">恢复内置映射</button>
+      <span class="hint">支持上传含「专业号」「品牌」「词性质/是否品牌Only」字段的 Excel / CSV。上传或手动新增后，会立即重新识别页面中的品牌与品牌 Only 口径。</span>
+      <span class="status" id="mappingStatus"></span>
+    </div>
+    <div class="mapping-toolbar">
+      <div class="control"><label>专业号 / 匹配关键词</label><input id="mappingKeyword" type="text" placeholder="例如：beba水奶、HSY、FH、爱他美白金系列" /></div>
+      <div class="control"><label>词性质 / 是否品牌 Only</label><select id="mappingNature"><option value="品牌相关">品牌 Only / 品牌相关</option><option value="品类相关">非品牌 / 品类相关</option></select></div>
+      <div class="control"><label>对应品牌</label><input id="mappingBrand" type="text" placeholder="例如：BEBA、合生元、飞鹤；非品牌可留空" /></div>
+      <div class="control"><label>匹配方式</label><select id="mappingMatchType"><option value="exact">完全匹配</option><option value="contains">包含匹配</option></select></div>
+      <div class="control"><label>备注</label><input id="mappingRemark" type="text" placeholder="可选：来源/品线/赛道" /></div>
+      <div class="control"><label>&nbsp;</label><button class="small-btn" id="mappingAddBtn" type="button">加入映射</button></div>
+    </div>
+    <div id="mappingInfo" class="summary-line" style="margin-top:10px"></div>
+    <div class="grid2" style="margin-top:12px">
+      <div>
+        <div class="section-title"><div><h2 style="font-size:15px">当前映射规则</h2><p>手动新增 / 上传规则会覆盖同名内置规则。</p></div></div>
+        <div class="table-wrap" style="max-height:320px"><table id="mappingTable"></table></div>
+      </div>
+      <div>
+        <div class="section-title"><div><h2 style="font-size:15px">当前未映射候选</h2><p>从当前筛选结果里列出未识别品牌的候选词，点击“填入”后可快速补充映射。</p></div></div>
+        <div class="table-wrap" style="max-height:320px"><table id="unmappedTable"></table></div>
+      </div>
     </div>
   </section>
 
@@ -180,6 +228,127 @@ const collator = new Intl.Collator('zh-Hans-CN', {numeric:true, sensitivity:'bas
 let DATA = [];
 let META = PAYLOAD.m || {};
 
+const MAPPING_STORAGE_KEY = 'xhs_professional_brand_mapping_v3';
+const DEFAULT_PRO_MAPPING = [{"keyword": "Aptamil爱他美3", "brand": "Aptamil爱他美3", "matchType": "exact", "wordCategory": "卓傲品牌词", "brandOwnership": "爱他美", "line": "卓傲", "track": "IMF", "remark": "来自上传映射表"}, {"keyword": "爱他美白金系列", "brand": "爱他美白金系列", "matchType": "exact", "wordCategory": "爱他美大词", "brandOwnership": "爱他美", "line": "爱他美", "track": "IMF", "remark": "来自上传映射表"}, {"keyword": "HSY", "brand": "合生元", "matchType": "exact", "wordCategory": "竞品-金领冠", "brandOwnership": "竞品", "line": "金领冠", "track": "IMF", "remark": "来自上传映射表"}, {"keyword": "FH", "brand": "飞鹤", "matchType": "exact", "wordCategory": "竞品-合生元派星", "brandOwnership": "竞品", "line": "合生元派星", "track": "IMF", "remark": "来自上传映射表"}, {"keyword": "FHXC", "brand": "飞鹤鲜萃", "matchType": "exact", "wordCategory": "竞品-星飞帆", "brandOwnership": "竞品", "line": "星飞帆", "track": "IMF", "remark": "来自上传映射表"}, {"keyword": "爱他美奇迹熠系列", "brand": "爱他美奇迹熠系列", "matchType": "exact", "wordCategory": "领熠品牌词", "brandOwnership": "爱他美", "line": "领熠", "track": "IMF", "remark": "来自上传映射表"}, {"keyword": "爱他美至熠系列", "brand": "爱他美至熠系列", "matchType": "exact", "wordCategory": "新生儿奶粉", "brandOwnership": "品类", "line": "新生儿奶粉", "track": "IMF", "remark": "来自上传映射表"}, {"keyword": "JLG", "brand": "金领冠", "matchType": "exact", "wordCategory": "奶粉口碑", "brandOwnership": "品类", "line": "奶粉口碑", "track": "IMF", "remark": "来自上传映射表"}, {"keyword": "A2ZC", "brand": "A2至初", "matchType": "exact", "wordCategory": "一段", "brandOwnership": "品类", "line": "一段", "track": "IMF", "remark": "来自上传映射表"}, {"keyword": "HSQF", "brand": "惠氏启赋", "matchType": "exact", "wordCategory": "二段", "brandOwnership": "品类", "line": "二段", "track": "IMF", "remark": "来自上传映射表"}, {"keyword": "MSJE", "brand": "美素佳儿", "matchType": "exact", "wordCategory": "三段", "brandOwnership": "品类", "line": "三段", "track": "IMF", "remark": "来自上传映射表"}, {"keyword": "FRISO_SIG", "brand": "美素佳儿签名版", "matchType": "exact", "wordCategory": "皇家美素佳儿", "brandOwnership": "竞品", "line": "皇家美素佳儿", "track": "IMF", "remark": "来自上传映射表"}, {"keyword": "A2ZBJ", "brand": "A2紫白金", "matchType": "exact", "wordCategory": "竞品美赞臣蓝臻", "brandOwnership": "竞品", "line": "竞品美赞臣蓝臻", "track": "IMF", "remark": "来自上传映射表"}, {"keyword": "A2ZY", "brand": "A2紫曜", "matchType": "exact", "wordCategory": "a2至初", "brandOwnership": "竞品", "line": "a2至初", "track": "IMF", "remark": "来自上传映射表"}, {"keyword": "MZC", "brand": "美赞臣", "matchType": "exact", "wordCategory": "德爱品牌词", "brandOwnership": "爱他美", "line": "DACH", "track": "IMF", "remark": "来自上传映射表"}, {"keyword": "FRISOHK", "brand": "港版美素佳儿", "matchType": "exact", "wordCategory": "澳爱和德爱对比词", "brandOwnership": "爱他美", "line": "澳爱和德爱对比词", "track": "IMF", "remark": "来自上传映射表"}, {"keyword": "QC", "brand": "超启能恩", "matchType": "exact", "wordCategory": "混合喂养", "brandOwnership": "品类", "line": "混合喂养", "track": "IMF", "remark": "来自上传映射表"}, {"keyword": "NEQH", "brand": "能恩全护", "matchType": "exact", "wordCategory": "澳爱品牌词", "brandOwnership": "爱他美", "line": "ANZ", "track": "IMF", "remark": "来自上传映射表"}, {"keyword": "纽康特", "brand": "纽康特", "matchType": "exact", "wordCategory": "A2紫白金", "brandOwnership": "竞品", "line": "A2紫白金", "track": "IMF", "remark": "来自上传映射表"}, {"keyword": "Karicare可瑞康3", "brand": "Karicare可瑞康3", "matchType": "exact", "wordCategory": "至熠品牌词", "brandOwnership": "爱他美", "line": "至熠", "track": "IMF", "remark": "来自上传映射表"}, {"keyword": "LH", "brand": "蓝河", "matchType": "exact", "wordCategory": "爱他美白罐", "brandOwnership": "爱他美", "line": "爱他美白罐", "track": "水解", "remark": "来自上传映射表"}, {"keyword": "JBAT", "brand": "佳贝艾特", "matchType": "exact", "wordCategory": "竞品超启能恩", "brandOwnership": "竞品", "line": "超启能恩", "track": "水解", "remark": "来自上传映射表"}, {"keyword": "诺优能", "brand": "诺优能", "matchType": "exact", "wordCategory": "竞品能恩全护", "brandOwnership": "竞品", "line": "能恩全护", "track": "水解", "remark": "来自上传映射表"}, {"keyword": "牛栏牌Cow&Gate", "brand": "牛栏牌Cow&Gate", "matchType": "exact", "wordCategory": "水解词包（适度水解+水解奶粉）", "brandOwnership": "品类", "line": "水解奶粉）", "track": "水解", "remark": "来自上传映射表"}, {"keyword": "YPXAS", "brand": "雅培小安素", "matchType": "exact", "wordCategory": "亲熠SI词", "brandOwnership": "爱他美", "line": "亲熠SI词", "track": "水解", "remark": "来自上传映射表"}];
+const DEFAULT_BRAND_ONLY_MAPPING = [
+  {keyword:'beba水奶', brand:'BEBA', matchType:'contains', wordCategory:'品牌相关', brandOwnership:'竞品', line:'BEBA', track:'IMF', remark:'内置：beba水奶按品牌 Only 识别', termNature:'品牌相关'},
+  {keyword:'beba 水奶', brand:'BEBA', matchType:'contains', wordCategory:'品牌相关', brandOwnership:'竞品', line:'BEBA', track:'IMF', remark:'内置：beba 水奶按品牌 Only 识别', termNature:'品牌相关'},
+  {keyword:'beba', brand:'BEBA', matchType:'contains', wordCategory:'品牌相关', brandOwnership:'竞品', line:'BEBA', track:'IMF', remark:'内置：BEBA 按品牌识别', termNature:'品牌相关'},
+  {keyword:'贝巴', brand:'BEBA', matchType:'contains', wordCategory:'品牌相关', brandOwnership:'竞品', line:'BEBA', track:'IMF', remark:'内置：贝巴按 BEBA 品牌识别', termNature:'品牌相关'}
+];
+let USER_PRO_MAPPING = [];
+function normalizeTextForMap(v){ return String(v ?? '').trim(); }
+function normalizeMapKey(v){ return normalizeTextForMap(v).toLowerCase(); }
+function mapMatchType(v){
+  const s = String(v || '').toLowerCase();
+  if(s.includes('contains') || s.includes('包含') || s.includes('模糊')) return 'contains';
+  return 'exact';
+}
+function normalizeMappingNature(v){
+  const s = String(v ?? '').trim().toLowerCase();
+  if(!s) return '品牌相关';
+  if(['false','0','no','n'].includes(s) || /否|非品牌|不是品牌|品类|category/.test(s)) return '品类相关';
+  if(['true','1','yes','y'].includes(s) || /是|品牌|brand|only/.test(s)) return '品牌相关';
+  return '品牌相关';
+}
+function mappingNatureLabel(v){ return normalizeMappingNature(v) === '品类相关' ? '非品牌 / 品类相关' : '品牌 Only / 品牌相关'; }
+function loadStoredMappings(){
+  try{
+    const saved = JSON.parse(localStorage.getItem(MAPPING_STORAGE_KEY) || '[]');
+    USER_PRO_MAPPING = Array.isArray(saved) ? saved.filter(x=>x && x.keyword && (x.brand || normalizeMappingNature(x.termNature ?? x.wordNature ?? x.isBrandOnly) === '品类相关')) : [];
+  }catch(e){ USER_PRO_MAPPING = []; }
+}
+function saveStoredMappings(){
+  localStorage.setItem(MAPPING_STORAGE_KEY, JSON.stringify(USER_PRO_MAPPING));
+}
+function allMappingRules(){
+  const m = new Map();
+  const defaults = [...DEFAULT_PRO_MAPPING, ...DEFAULT_BRAND_ONLY_MAPPING];
+  for(const r of defaults){
+    if(!r.keyword || (!r.brand && normalizeMappingNature(r.termNature ?? r.wordNature ?? r.isBrandOnly) !== '品类相关')) continue;
+    m.set(normalizeMapKey(r.keyword), {...r, matchType:mapMatchType(r.matchType), termNature:normalizeMappingNature(r.termNature ?? r.wordNature ?? r.isBrandOnly), source:'内置映射表', locked:true});
+  }
+  for(const r of USER_PRO_MAPPING){
+    if(!r.keyword || (!r.brand && normalizeMappingNature(r.termNature ?? r.wordNature ?? r.isBrandOnly) !== '品类相关')) continue;
+    m.set(normalizeMapKey(r.keyword), {...r, matchType:mapMatchType(r.matchType), termNature:normalizeMappingNature(r.termNature ?? r.wordNature ?? r.isBrandOnly), source:r.source || '手动/上传', locked:false});
+  }
+  return [...m.values()].sort((a,b)=>{
+    const mt = (a.matchType==='exact'?0:1) - (b.matchType==='exact'?0:1);
+    return mt || normalizeTextForMap(b.keyword).length - normalizeTextForMap(a.keyword).length || collator.compare(a.keyword,b.keyword);
+  });
+}
+function detectMappedBrand(term){
+  const raw = normalizeTextForMap(term);
+  if(!raw) return null;
+  const low = raw.toLowerCase();
+  const rules = allMappingRules();
+  for(const r of rules.filter(x=>x.matchType==='exact')){
+    if(low === normalizeMapKey(r.keyword)) return {...r};
+  }
+  for(const r of rules.filter(x=>x.matchType!=='exact')){
+    const key = normalizeMapKey(r.keyword);
+    if(key && low.includes(key)) return {...r};
+  }
+  return null;
+}
+function detectBrandByRules(term){
+  const t = String(term || '').toLowerCase();
+  for(const r of BRAND_RULES){ if(t.includes(r.key.toLowerCase())) return r.brand; }
+  return '';
+}
+function applyMappingsToData(){
+  for(const r of DATA){
+    if(r._baseBrand === undefined) r._baseBrand = r.brand || detectBrandByRules(r.term) || '';
+    if(r._baseTermClass === undefined) r._baseTermClass = r.termClass || classifyTerm(r.term, r._baseBrand);
+    const mapped = detectMappedBrand(r.term);
+    if(mapped){
+      const nature = normalizeMappingNature(mapped.termNature ?? mapped.wordNature ?? mapped.isBrandOnly);
+      if(nature === '品类相关'){
+        r.brand = '';
+        r.termClass = mapped.wordCategory || '品类通用';
+      }else{
+        r.brand = mapped.brand || mapped.line || mapped.keyword;
+        r.termClass = '品牌相关';
+      }
+      r.mappingKeyword = mapped.keyword;
+      r.mappingSource = mapped.source;
+    }else{
+      const baseBrand = r._baseBrand || detectBrandByRules(r.term) || '';
+      r.brand = baseBrand;
+      r.termClass = classifyTerm(r.term, baseBrand) || r._baseTermClass || '';
+      r.mappingKeyword = '';
+      r.mappingSource = '';
+    }
+  }
+}
+function upsertUserMapping(entry){
+  const keyword = normalizeTextForMap(entry.keyword);
+  const termNature = normalizeMappingNature(entry.termNature ?? entry.wordNature ?? entry.isBrandOnly);
+  let brand = normalizeTextForMap(entry.brand);
+  if(!keyword) return false;
+  if(termNature === '品牌相关' && !brand) brand = keyword;
+  if(termNature === '品类相关') brand = '';
+  const normalized = normalizeMapKey(keyword);
+  USER_PRO_MAPPING = USER_PRO_MAPPING.filter(r => normalizeMapKey(r.keyword) !== normalized);
+  USER_PRO_MAPPING.push({
+    keyword, brand, termNature,
+    matchType: mapMatchType(entry.matchType),
+    wordCategory: normalizeTextForMap(entry.wordCategory || (termNature === '品牌相关' ? '品牌相关' : '品类通用')),
+    brandOwnership: normalizeTextForMap(entry.brandOwnership),
+    line: normalizeTextForMap(entry.line),
+    track: normalizeTextForMap(entry.track),
+    remark: normalizeTextForMap(entry.remark),
+    source: entry.source || '手动新增'
+  });
+  saveStoredMappings();
+  return true;
+}
+function removeUserMapping(keyword){
+  const k = normalizeMapKey(keyword);
+  USER_PRO_MAPPING = USER_PRO_MAPPING.filter(r => normalizeMapKey(r.keyword) !== k);
+  saveStoredMappings();
+}
+
 const BRAND_RULES = [
   ['爱他美', ['爱他美','卓傲','至熠','领熠','德白','德爱','澳爱白金','澳洲白金','德国白金','特爱敏佳','敏佳180','敏佳']],
   ['a2', ['a2','a 2','紫曜','紫白金','至初']],
@@ -189,6 +358,7 @@ const BRAND_RULES = [
   ['启赋/惠氏', ['启赋','惠氏','蓝钻','蕴淳']],
   ['合生元', ['合生元','派星','贝塔星']],
   ['雀巢能恩', ['雀巢','超启能恩','能恩全护','能恩','超启','恩敏舒']],
+  ['BEBA', ['beba','贝巴','雀巢beba','至尊beba']],
   ['美赞臣', ['美赞臣','蓝臻','铂睿','亲舒','安儿宝']],
   ['蓝胖子', ['蓝胖子']], ['君乐宝', ['君乐宝','乐铂','至臻','乐臻','旗帜']], ['佳贝艾特', ['佳贝艾特']],
   ['海普诺凯', ['海普诺凯','荷致']], ['贝因美', ['贝因美']], ['优博/圣元', ['优博','圣元','瑞霂']],
@@ -199,9 +369,8 @@ function esc(s){ return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','
 function uniq(arr){ return [...new Set(arr.filter(v => v !== undefined && v !== null && v !== ''))]; }
 function fmt(n){ return Number(n || 0).toLocaleString('zh-CN'); }
 function detectBrand(term){
-  const t = String(term || '').toLowerCase();
-  for(const r of BRAND_RULES){ if(t.includes(r.key.toLowerCase())) return r.brand; }
-  return '';
+  const mapped = detectMappedBrand(term);
+  return mapped ? mapped.brand : detectBrandByRules(term);
 }
 function classifyTerm(term, brand){
   const t = String(term || '').toLowerCase();
@@ -292,6 +461,148 @@ function fillControls(initial=false){
   $('brand').innerHTML = optionHTML(brands, oldBrand, '全部品牌');
   $('brand').value = ['全部', ...brands].includes(oldBrand) ? oldBrand : '全部';
 }
+
+function mappingRulesForDisplay(){
+  return allMappingRules().map(r=>({
+    keyword:r.keyword, brand:r.brand, termNature:normalizeMappingNature(r.termNature ?? r.wordNature ?? r.isBrandOnly), matchType:mapMatchType(r.matchType), wordCategory:r.wordCategory||'', brandOwnership:r.brandOwnership||'', line:r.line||'', track:r.track||'', remark:r.remark||'', source:r.source||'', locked:!!r.locked
+  }));
+}
+function currentUnmappedCandidates(){
+  const rows = filteredCurrent().filter(r => !r.brand);
+  const m = new Map();
+  for(const r of rows){
+    const t = normalizeTextForMap(r.term);
+    if(!t) continue;
+    const likely = /[A-Za-z]/.test(t) || /品牌|系列|官方|奶粉|白金|紫曜|紫白金|卓睿|派星|珍护|启赋|能恩|美素|羊奶|水解/.test(t);
+    if(!likely && r.rank > 20) continue;
+    if(!m.has(t)) m.set(t, {term:t, count:0, best:Infinity, roots:new Set()});
+    const o = m.get(t); o.count++; o.best = Math.min(o.best, r.rank); o.roots.add(`${r.direction}/${r.rootType}/${r.root}`);
+  }
+  return [...m.values()].sort((a,b)=>a.best-b.best || b.count-a.count || collator.compare(a.term,b.term)).slice(0,60);
+}
+function renderMappingPanel(){
+  const rules = mappingRulesForDisplay();
+  const userCount = USER_PRO_MAPPING.length;
+  const matchedRows = DATA.filter(r => r.mappingKeyword).length;
+  $('mappingPill').textContent = `${fmt(rules.length)} 条规则`;
+  $('mappingInfo').innerHTML = `当前共有 <b>${fmt(rules.length)}</b> 条映射规则，其中手动/上传规则 <b>${fmt(userCount)}</b> 条；当前数据中通过映射表命中 <b>${fmt(matchedRows)}</b> 条记录。映射优先级高于系统自动品牌识别，可用于手动指定是否进入「品牌 Only」。`;
+  const head = `<thead><tr><th>专业号 / 匹配词</th><th>词性质</th><th>对应品牌</th><th>匹配方式</th><th>词大类</th><th>品线</th><th>来源</th><th>操作</th></tr></thead>`;
+  const body = rules.slice(0,200).map(r => `<tr><td><span class="mapping-chip">${esc(r.keyword)}</span></td><td>${r.termNature==='品牌相关'?'<span class="brand-tag">品牌 Only</span>':'<span class="cat-tag">非品牌</span>'}</td><td>${r.brand?`<span class="brand-tag ${r.brand==='爱他美'?'self':''}">${esc(r.brand)}</span>`:'<span class="muted">-</span>'}</td><td>${r.matchType==='contains'?'包含匹配':'完全匹配'}</td><td>${esc(r.wordCategory||'-')}</td><td>${esc(r.line||'-')}</td><td><span class="rule-source">${esc(r.source || '-')}</span></td><td>${r.locked?'<span class="muted">内置</span>':`<button class="small-btn mapping-delete" data-keyword="${esc(r.keyword)}">删除</button>`}</td></tr>`).join('');
+  $('mappingTable').innerHTML = head + `<tbody>${body || '<tr><td colspan="8" class="empty">暂无映射规则</td></tr>'}</tbody>`;
+  const candidates = currentUnmappedCandidates();
+  const cHead = `<thead><tr><th>候选词</th><th>最佳原始排名</th><th>出现次数</th><th>覆盖词根</th><th>操作</th></tr></thead>`;
+  const cBody = candidates.map(x => `<tr><td title="${esc(x.term)}"><span class="origin-term">${esc(x.term)}</span></td><td>#${x.best}</td><td>${fmt(x.count)}</td><td>${fmt(x.roots.size)}</td><td><button class="small-btn mapping-fill" data-term="${esc(x.term)}">填入</button></td></tr>`).join('');
+  $('unmappedTable').innerHTML = cHead + `<tbody>${cBody || '<tr><td colspan="5" class="empty">当前筛选下暂无未映射候选</td></tr>'}</tbody>`;
+}
+function addMappingFromInputs(){
+  const keyword = $('mappingKeyword').value.trim();
+  const termNature = $('mappingNature').value;
+  let brand = $('mappingBrand').value.trim();
+  const matchType = $('mappingMatchType').value;
+  const remark = $('mappingRemark').value.trim();
+  if(!keyword){ $('mappingStatus').textContent = '请先填写专业号 / 匹配关键词。'; return; }
+  if(termNature === '品牌相关' && !brand) brand = keyword;
+  upsertUserMapping({keyword, brand, matchType, remark, termNature, source:'手动新增'});
+  $('mappingKeyword').value = ''; $('mappingBrand').value = ''; $('mappingRemark').value = ''; $('mappingNature').value = '品牌相关';
+  applyMappingsToData(); fillControls(); render();
+  $('mappingStatus').textContent = termNature === '品牌相关' ? `已加入品牌 Only 映射：${keyword} → ${brand}` : `已加入非品牌映射：${keyword} 将从品牌 Only 排除`;
+}
+function parseMappingRowsFromArray(arr, sourceName){
+  const out = [];
+  const text = v => v === null || v === undefined ? '' : String(v).trim();
+  for(let r=0; r<arr.length; r++){
+    const row = arr[r] || [];
+    const headers = row.map(text);
+    const profIdx = headers.findIndex(h => ['专业号','品牌账户名称','账号','账户名称','匹配关键词','关键词'].includes(h));
+    let brandIdx = headers.findIndex(h => h === '品牌' || h === '对应品牌' || h === '品牌名称');
+    const natureIdx = headers.findIndex(h => ['词性质','是否品牌Only','是否品牌 Only','是否品牌相关','品牌Only','品牌 Only','isBrandOnly','termNature'].includes(h));
+    if(profIdx >= 0 && (brandIdx >= 0 || natureIdx >= 0)){
+      const matchIdx = headers.findIndex(h => ['匹配方式','matchType','匹配类型'].includes(h));
+      const wordIdx = headers.findIndex(h => h === '词大类');
+      const ownIdx = headers.findIndex(h => h === '品牌归属');
+      const lineIdx = headers.findIndex(h => h === '品线归属' || h === '品线');
+      const trackIdx = headers.findIndex(h => h === '赛道');
+      const remarkIdx = headers.findIndex(h => h === '备注');
+      for(let i=r+1; i<arr.length; i++){
+        const rr = arr[i] || [];
+        const keyword = text(rr[profIdx]); const brand = brandIdx>=0 ? text(rr[brandIdx]) : '';
+        const termNature = natureIdx>=0 ? normalizeMappingNature(text(rr[natureIdx])) : '品牌相关';
+        if(!keyword || (termNature === '品牌相关' && !brand)) continue;
+        out.push({keyword, brand, termNature, matchType:matchIdx>=0?text(rr[matchIdx]):'exact', wordCategory:wordIdx>=0?text(rr[wordIdx]):'', brandOwnership:ownIdx>=0?text(rr[ownIdx]):'', line:lineIdx>=0?text(rr[lineIdx]):'', track:trackIdx>=0?text(rr[trackIdx]):'', remark:remarkIdx>=0?text(rr[remarkIdx]):'', source:sourceName || '上传映射表'});
+      }
+      return out;
+    }
+  }
+  return out;
+}
+function parseCSVText(text){
+  const rows=[]; let row=[], cur='', q=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i], nx=text[i+1];
+    if(ch==='"'){
+      if(q && nx==='"'){ cur+='"'; i++; } else q=!q;
+    }else if(ch===',' && !q){ row.push(cur); cur=''; }
+    else if((ch==='\n' || ch==='\r') && !q){
+      if(ch==='\r' && nx==='\n') i++;
+      row.push(cur); rows.push(row); row=[]; cur='';
+    }else cur+=ch;
+  }
+  row.push(cur); rows.push(row);
+  return rows.filter(r => r.some(v => String(v||'').trim()));
+}
+async function handleMappingFile(e){
+  const file = e.target.files?.[0]; if(!file) return;
+  $('mappingStatus').textContent = '正在读取映射表...';
+  try{
+    let entries = [];
+    if(/\.csv$/i.test(file.name)){
+      const txt = await file.text();
+      entries = parseMappingRowsFromArray(parseCSVText(txt), `上传：${file.name}`);
+    }else{
+      if(!window.XLSX){ $('mappingStatus').textContent = 'Excel 解析组件未加载，暂时无法上传映射表。'; return; }
+      const wb = XLSX.read(await file.arrayBuffer(), {type:'array'});
+      for(const sheetName of wb.SheetNames){
+        const arr = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], {header:1, raw:true, defval:null, blankrows:true});
+        const parsed = parseMappingRowsFromArray(arr, `上传：${file.name}/${sheetName}`);
+        if(parsed.length) entries = entries.concat(parsed);
+      }
+    }
+    if(!entries.length){ $('mappingStatus').textContent = '未识别到「专业号」和「品牌/词性质」字段，请检查映射表。'; return; }
+    entries.forEach(upsertUserMapping);
+    applyMappingsToData(); fillControls(); render();
+    $('mappingStatus').textContent = `已导入 ${fmt(entries.length)} 条映射规则。`;
+  }catch(err){ console.error(err); $('mappingStatus').textContent = '映射表导入失败，请检查文件格式。'; }
+  e.target.value = '';
+}
+function downloadMappingCSV(){
+  const rows = [['词大类','品牌归属','品线归属','赛道','专业号','词性质','品牌','匹配方式','来源','备注']];
+  mappingRulesForDisplay().forEach(r => rows.push([r.wordCategory||'', r.brandOwnership||'', r.line||'', r.track||'', r.keyword, mappingNatureLabel(r.termNature), r.brand||'', r.matchType==='contains'?'包含匹配':'完全匹配', r.source||'', r.remark||'']));
+  saveCSVFile('xhs_professional_brand_mapping.csv', rows);
+}
+function resetUserMappings(){
+  USER_PRO_MAPPING = [];
+  saveStoredMappings();
+  applyMappingsToData(); fillControls(); render();
+  $('mappingStatus').textContent = '已恢复内置映射表。';
+}
+function handleMappingTableClick(e){
+  const del = e.target.closest('.mapping-delete');
+  if(del){
+    removeUserMapping(del.dataset.keyword || '');
+    applyMappingsToData(); fillControls(); render();
+    $('mappingStatus').textContent = '已删除手动/上传映射；如存在同名内置规则，将自动恢复内置映射。';
+  }
+}
+function handleUnmappedClick(e){
+  const btn = e.target.closest('.mapping-fill');
+  if(btn){
+    $('mappingKeyword').value = btn.dataset.term || '';
+    $('mappingNature').value = '品牌相关';
+    $('mappingBrand').focus();
+    $('mappingStatus').textContent = '已填入候选词；如要纳入品牌 Only，请输入对应品牌；如要排除品牌 Only，请把词性质切换为「非品牌 / 品类相关」。';
+  }
+}
+
 function renderKpis(rows){
   const f = currentFilters();
   const brandRows = rows.filter(r=>r.brand);
@@ -637,6 +948,7 @@ function render(){
   fillControls();
   const rows = filteredCurrent();
   renderKpis(rows);
+  renderMappingPanel();
   renderSeriesLearning();
   const brandStats = groupStats(rows.filter(r=>r.brand), r=>r.brand).slice(0,10);
   renderBars('brandBars', brandStats.map(x=>({label:x.label, count:x.count, best:x.best})), 'label', 'count', 'best');
@@ -725,7 +1037,7 @@ function parseWorkbook(wb){
         for(const p of periods){
           const term = text(cell(arr,r,p.c));
           if(!term || term.toLowerCase()==='none') continue;
-          const brand = detectBrand(term);
+          const brand = detectBrandByRules(term);
           out.push({direction,rootType,root:st.root,period:p.pi.label,periodType:p.pi.type,sort:p.pi.sort,rank,term,brand,termClass:classifyTerm(term,brand)});
         }
       }
@@ -746,13 +1058,16 @@ async function handleFile(e){
     const buf = await file.arrayBuffer();
     const wb = XLSX.read(buf, {type:'array'});
     DATA = parseWorkbook(wb);
+    applyMappingsToData();
     META = {sourceName:file.name, generatedAt:new Date().toLocaleString('zh-CN'), recordCount:DATA.length, termCount:uniq(DATA.map(r=>r.term)).length, rootCount:uniq(DATA.map(r=>r.root)).length, brandCount:uniq(DATA.map(r=>r.brand)).length};
     $('status').textContent = `已载入：${file.name}，共 ${fmt(DATA.length)} 条记录`;
     fillControls(true); resetFilters();
   }catch(err){ console.error(err); $('status').textContent = '解析失败，请确认文件结构与小红书上下游词表一致。'; }
 }
 function init(){
+  loadStoredMappings();
   DATA = expandPayload(PAYLOAD);
+  applyMappingsToData();
   fillControls(true);
   const latestMonth = getPeriods('月度').at(-1); if(latestMonth){ $('periodType').value='月度'; fillControls(); $('period').value=latestMonth.label; }
   render();
@@ -762,6 +1077,13 @@ function init(){
   $('csvBtn').addEventListener('click', downloadCSV);
   $('trendWideCsvBtn').addEventListener('click', downloadTrendWideCSV);
   $('trendLongCsvBtn').addEventListener('click', downloadTrendLongCSV);
+  $('mappingAddBtn').addEventListener('click', addMappingFromInputs);
+  $('mappingUploadBtn').addEventListener('click', () => $('mappingFileInput').click());
+  $('mappingFileInput').addEventListener('change', handleMappingFile);
+  $('mappingDownloadBtn').addEventListener('click', downloadMappingCSV);
+  $('mappingResetBtn').addEventListener('click', resetUserMappings);
+  $('mappingTable').addEventListener('click', handleMappingTableClick);
+  $('unmappedTable').addEventListener('click', handleUnmappedClick);
   $('uploadBtn').addEventListener('click', () => $('fileInput').click());
   $('fileInput').addEventListener('change', handleFile);
   if(!window.XLSX){ $('status').textContent = '已加载内置数据；Excel 上传组件未加载，请检查网络或 CDN 访问。'; } else { $('status').textContent = '已加载内置数据，也可上传新版 Excel 重新分析。'; }
